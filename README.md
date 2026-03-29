@@ -2,13 +2,12 @@
 
 A hybrid blockchain-based supply chain provenance system, combining on chain smart contracts, an off-chain event backend server to seed the index db, and a modern web frontend with react.js.
 
----
 
 ## Architecture Overview
 
-This project implements a three-layer architecture:
 
-## System Architecture Diagram
+
+### System Architecture Diagram
 
 ```mermaid
 graph TD
@@ -41,7 +40,7 @@ graph TD
 
     %% 4. On-Chain Layer
     subgraph Blockchain Layer [4. On-Chain Layer]
-        H{Polygon Blockchain\nProvenance Smart Contracts}:::onchain
+        H{Ethereum Blockchain\nProvenance Smart Contracts}:::onchain
     end
 
     %% Relationships and Data Flow
@@ -56,24 +55,51 @@ graph TD
 
     E -->|Submits Tx: Product ID + Status + CID| H
     H -->|Emits State Changes & Verifies Ownership| E
+```
 
+This project implements a three-layer architecture:
+
+### 1.  Role-Based Access Control and Presentation and Backend (RBAC)
+Access and permissions are strictly managed based on the participant's physical role in the supply chain:
+* **Producers:** Initiate the digital provenance record by creating and registering new product batches.
+* **Suppliers/Distributors:** Act as the logistics handlers, updating shipment statuses, splitting parent batches, and recording ownership transfers.
+* **Retailers:** Represent the final commercial destination, verifying product authenticity upon receipt and updating inventory availability.
+* **Consumers:** The end-users who utilize a read-only interface to verify the item details and tracking the history and origin.
+
+### 2. The On-Chain Layer (Smart Contracts)
+Acting as the immutable backend, this layer is programmed in **Solidity**. To minimize gas fees and optimize performance. It stores only lightweight data:
+* Unique Product IDs (cryptographically generated to prevent counterfeiting)
+* Parent Batch IDs (to maintain lineage during shipment splitting)
+* Wallet addresses of current and past owners
+* Cryptographic hashes (pointers) to external data
+
+### 3. The Off-Chain Layer (Storage & Database)
+To prevent network load, all "heavy" data—such as PDFs, and complex metadata—is stored off-chain using standard databases or decentralized file systems like **IPFS**. The system maintains tamper-proofing by mainting hash of those data in the block chain
+
+---
+
+
+### Code Organization
 
 1. **On-Chain Layer (`blockchain/`)**  
 	- Solidity smart contracts for supply chain provenance  
 	- Hardhat for development, testing, and deployment
     - Mocha for unit testing
 
-2. **Off-Chain Backend (`backend/`)**  
+2. **Off-Chain Backend (`back-end/`)**  
 	- Node.js service listens to blockchain events (e.g., `ProductRegistered`)  
 	- Persists data to a database (Postgres)
 
-3. **Presentation Layer (`frontend/`)**  
+3. **Presentation Layer (`front-end/`)**  
 	- React-based UI for all roles (Admin, Producer, Distributor, Retailer, Consumer)  
 	- Interacts with both the blockchain and the backend indexer
 
----
 
-## Prerequisites
+
+## Step-by-Step Setup/Run Instructions
+
+
+### Prerequisites
 
 - **Node.js** (v24.14.10 is recommended)
 - **npm** (comes with Node.js)
@@ -81,7 +107,7 @@ graph TD
 - **Postgres** (for backend database, if running locally)
 
 
-### How to install node v24.14.10 ?
+#### How to install node v24.14.10 ?
 
 1. Install NVM as mentioned: https://github.com/nvm-sh/nvm
 2. Install node veresion 24
@@ -96,9 +122,8 @@ v24.14.10
 
 ```
 
-## Step-by-Step Run Instructions
 
-### Block Chain Developement and Deployment
+### Block Chain Deployment
 1. **Clone the repository**
 	```sh
 	git clone <repo-url>
@@ -145,7 +170,7 @@ v24.14.10
     ```
 
 
-### Start the backend event listener ###
+### Deployment/Execution backend event listener ###
 
 1. **Change the diretory to back-end**
     ```sh
@@ -160,7 +185,7 @@ v24.14.10
 	npm run dev
 	```
 
-### Start the Front ###
+### Deployment/Execution Start the Front ###
 
 1. **Change the diretory to front-end**
     ```sh
@@ -183,10 +208,8 @@ v24.14.10
 
 ## Notes
 
-- Ensure MetaMask is connected to the local Hardhat network.
 - Update `.env` files as needed for blockchain RPC URLs and database credentials.
 - For production/testnet deployment, update network configs and use real endpoints.
 
 ---
-
 
