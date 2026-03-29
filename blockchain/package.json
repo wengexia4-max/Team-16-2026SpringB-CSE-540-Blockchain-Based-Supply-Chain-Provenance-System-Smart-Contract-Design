@@ -9,7 +9,7 @@
   "scripts": {
     "test": "hardhat test",
     "compile": "hardhat compile",
-    "deploy": "hardhat ignition deploy ./ignition/modules/Lock.js --network sepolia"
+    "deploy": "hardhat ignition deploy ./ignition/modules/SupplyChainProvenance.js --network sepolia"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.2",
