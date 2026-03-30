@@ -1,8 +1,6 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# Team_16-CSE540-Supply_Chain_Provenance
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
-
-At the current project stage, the smart contract draft has been implemented and tested locally in the `blockchain/` module using Hardhat. The current implementation mainly covers admin role assignment, producer-side product registration, and distributor-side warehouse receiving workflow.
+A hybrid blockchain-based supply chain provenance system, combining on chain smart contracts, an off-chain event backend server to seed the index db, and a modern web frontend with react.js.
 
 ## Project Overview
 
