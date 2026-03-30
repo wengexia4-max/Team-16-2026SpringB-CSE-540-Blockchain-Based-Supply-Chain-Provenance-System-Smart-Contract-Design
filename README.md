@@ -72,8 +72,20 @@ Acting as the immutable backend, this layer is programmed in **Solidity**. To mi
 * Wallet addresses of current and past owners
 * Cryptographic hashes (pointers) to external data
 
+**The current smart contract draft focuses mainly on the producer and distributor workflow. At this stage, the contract includes:**
+* Admin role assignment for supply chain participants
+* Producer creation of new product records
+* Producer status update from `InProduction` to `ReadyToShip`
+* Distributor receiving products at warehouse
+* Distributor warehouse quality check and storage updates
+* Distributor shipment to retailer
+* Draft placeholder interfaces for retailer and consumer operations
 
-### Code Organization
+### 3. The Off-Chain Layer (Storage & Database)
+To prevent network load, all "heavy" data—such as PDFs, and complex metadata—is stored off-chain using standard databases or decentralized file systems like **IPFS**. The system maintains tamper-proofing by mainting hash of those data in the block chain
+
+
+## Code Organization
 
 1. **On-Chain Layer (`blockchain/`)**  
 	- Solidity smart contracts for supply chain provenance  
@@ -201,21 +213,9 @@ npx hardhat keystore set SEPOLIA_PRIVATE_KEY
 ---
 
 
-**The current smart contract draft focuses mainly on the producer and distributor workflow. At this stage, the contract includes:**
-* Admin role assignment for supply chain participants
-* Producer creation of new product records
-* Producer status update from `InProduction` to `ReadyToShip`
-* Distributor receiving products at warehouse
-* Distributor warehouse quality check and storage updates
-* Distributor shipment to retailer
-* Draft placeholder interfaces for retailer and consumer operations
 
-### 3. The Off-Chain Layer (Storage & Database)
-To prevent network load, all "heavy" data—such as PDFs, and complex metadata—is stored off-chain using standard databases or decentralized file systems like **IPFS**. The system maintains tamper-proofing by mainting hash of those data in the block chain
 
----
-
-### Current Smart Contract Draft Status
+## Current Smart Contract Draft Status
 
 **The current `SupplyChainProvenance.sol` draft in the `blockchain/contracts/` folder has been compiled and tested locally with Hardhat.**
 
