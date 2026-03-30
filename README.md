@@ -90,12 +90,51 @@ To prevent network load, all "heavy" dataâ€”such as PDFs, and complex metadataâ€
 ---
 
 
+---
+
+### Current Smart Contract Draft Status
+
+The current `SupplyChainProvenance.sol` draft in the `blockchain/contracts/` folder has been compiled and tested locally with Hardhat.
+
+Implemented and tested functions currently include:
+* Contract deployment
+* Admin role initialization
+* Admin role assignment for other participants
+* Producer `createProduct(...)`
+* Producer `markReadyToShip(...)`
+* Distributor `receiveAtWarehouse(...)`
+
+Additional distributor functions have also been drafted in the contract for the next stage of implementation:
+* `passWarehouseQualityCheck(...)`
+* `storeInWarehouse(...)`
+* `shipToRetailer(...)`
+* `receiveReturnedFromRetailer(...)`
+
+The retailer and consumer sections are currently included as draft placeholders to show the intended contract structure for later development.
+
+### Local Test Coverage
+
+A local Hardhat test file has been added for the current draft contract:
+* `test/SupplyChainProvenance.ts`
+
+The current basic test coverage includes:
+1. Contract deploys successfully
+2. Deployer is initialized as admin
+3. Admin can assign producer and distributor roles
+4. Producer can create a product record
+5. Distributor can receive a product after the producer marks it ready to ship
+
+At the current stage, these tests pass locally in Hardhat.
+
+
 ### Code Organization
 
 1. **On-Chain Layer (`blockchain/`)**  
 	- Solidity smart contracts for supply chain provenance  
 	- Hardhat for development, testing, and deployment
     - Mocha for unit testing
+    - Current contract draft: `contracts/SupplyChainProvenance.sol`
+    - Current local tests: `test/SupplyChainProvenance.ts`
 
 2. **Off-Chain Backend (`back-end/`)**  
 	- Node.js service listens to blockchain events (e.g., `ProductRegistered`)  
@@ -158,6 +197,13 @@ v24.14.1
     ```
     npm run test
     ```
+
+	To run the current draft contract test file only:
+    ```sh
+    npm run test test/SupplyChainProvenance.ts
+    ```
+**(Deployment work still in progress)**
+
 6. **Deploy smart contract local** 
     ```
     npm run deploy-local
@@ -221,6 +267,9 @@ v24.14.1
 
 - Update `.env` files as needed for blockchain RPC URLs and database credentials.
 - For production/testnet deployment, update network configs and use real endpoints.
+
+- The current contract draft is intentionally scoped to the producer and distributor workflow for this submission stage.
+- The current local Hardhat test results confirm that deployment, role assignment, product creation, and warehouse receiving workflow are functioning as expected.
 
 ---
 
