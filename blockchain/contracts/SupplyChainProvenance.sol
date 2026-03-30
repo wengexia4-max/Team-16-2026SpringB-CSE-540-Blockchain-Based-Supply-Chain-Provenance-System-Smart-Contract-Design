@@ -9,8 +9,8 @@ pragma solidity ^0.8.28;
 /**
  * @title SupplyChainProvenance
  * @notice Draft smart contract for a blockchain-based supply chain provenance system.
- * @dev This draft focuses mainly on producer and distributor workflow.
- *      Retailer and consumer functions are included as placeholders for later development.
+ * @dev Covers producer, distributor, retailer stocking, and consumer purchase.
+ *      Auditor workflows may be extended later.
  */
 contract SupplyChainProvenance {
     // Contract deployer acts as the system admin.
@@ -148,7 +148,7 @@ contract SupplyChainProvenance {
      */
     function assignRole(address user, Role role) public adminOnly {
         rolesMapping[user] = role;
-        emit RoleAssigned(admin, user, role);
+        emit RoleAssigned(user, role);
     }
 
     /************************************
@@ -336,44 +336,51 @@ contract SupplyChainProvenance {
     }
 
     /************************************
-     * Retailer Functions (Draft Only)
+     * Retailer Functions
      ************************************/
 
     /**
-     * @notice Retailer receives product from distributor.
-     * @dev Draft placeholder for later implementation.
+     * @notice Retailer confirms receipt after distributor shipment.
+     * @dev Moves status from ShippedToRetailer to RetailerQualityCheckPassed.
      */
     function retailerReceiveProduct(
         uint256 prodId,
         string memory ipfsHash
     ) public onlyRole(Role.Retailer) productExists(prodId) {
-        // Intended logic:
-        // 1. Verify product was shipped to retailer.
-        // 2. Confirm retailer custody.
-        // 3. Update retailer-side receiving / QC status.
-        // 4. Emit status change event.
-
         Product storage product = productLedger[prodId];
+
+        require(product.currentOwner == msg.sender, "Only the receiving retailer can confirm receipt");
+        require(
+            product.currentStatus == ProductStatus.ShippedToRetailer,
+            "Product has not been shipped to this retailer"
+        );
+
+        product.currentStatus = ProductStatus.RetailerQualityCheckPassed;
         product.ipfsHash = ipfsHash;
-        prodId; // silence warning in draft version
+
+        emit ProductStatusChanged(prodId, ProductStatus.RetailerQualityCheckPassed, msg.sender, ipfsHash);
     }
 
     /**
-     * @notice Retailer marks product as available in store.
-     * @dev Draft placeholder for later implementation.
+     * @notice Retailer lists the product as available for in-store sale.
+     * @dev Requires prior retailer receiving step.
      */
     function placeInStore(
         uint256 prodId,
         string memory ipfsHash
     ) public onlyRole(Role.Retailer) productExists(prodId) {
-        // Intended logic:
-        // 1. Verify retailer has accepted the product.
-        // 2. Mark product as available for sale.
-        // 3. Emit status change event.
-
         Product storage product = productLedger[prodId];
+
+        require(product.currentOwner == msg.sender, "Only the stocking retailer can list this product");
+        require(
+            product.currentStatus == ProductStatus.RetailerQualityCheckPassed,
+            "Product must pass retailer receiving checks first"
+        );
+
+        product.currentStatus = ProductStatus.InStore;
         product.ipfsHash = ipfsHash;
-        prodId;
+
+        emit ProductStatusChanged(prodId, ProductStatus.InStore, msg.sender, ipfsHash);
     }
 
     /**
@@ -395,12 +402,12 @@ contract SupplyChainProvenance {
     }
 
     /************************************
-     * Consumer Functions (Draft Only)
+     * Consumer Functions
      ************************************/
 
     /**
-     * @notice Consumer verifies product information.
-     * @dev Draft placeholder. Final UI may call this through frontend or API.
+     * @notice Read-only provenance lookup (any caller; typical use: consumer UI).
+     * @dev Same data as getProduct; kept for role-oriented API naming.
      */
     function verifyProduct(uint256 prodId)
         public
@@ -412,21 +419,33 @@ contract SupplyChainProvenance {
     }
 
     /**
-     * @notice Consumer purchases a product.
-     * @dev Draft placeholder for later implementation.
+     * @notice Consumer purchases an in-store product; custody moves to the consumer.
+     * @param prodId Product ID.
+     * @param ipfsHash Optional pointer to receipt or sale metadata off-chain.
      */
-    function purchaseProduct(uint256 prodId)
+    function purchaseProduct(uint256 prodId, string memory ipfsHash)
         public
         onlyRole(Role.Consumer)
         productExists(prodId)
     {
-        // Intended logic:
-        // 1. Verify product is in store.
-        // 2. Mark product as sold.
-        // 3. Optionally assign final ownership to consumer.
-        // 4. Emit status change event.
+        Product storage product = productLedger[prodId];
 
-        prodId;
+        require(
+            product.currentStatus == ProductStatus.InStore,
+            "Product is not available for sale in store"
+        );
+        require(
+            rolesMapping[product.currentOwner] == Role.Retailer,
+            "Current custodian must be a retailer"
+        );
+
+        address previousOwner = product.currentOwner;
+        product.currentOwner = msg.sender;
+        product.currentStatus = ProductStatus.Sold;
+        product.ipfsHash = ipfsHash;
+
+        emit ProductOwnershipTransferred(prodId, previousOwner, msg.sender);
+        emit ProductStatusChanged(prodId, ProductStatus.Sold, msg.sender, ipfsHash);
     }
 
     /************************************
