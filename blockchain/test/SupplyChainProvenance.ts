@@ -124,4 +124,79 @@ describe("SupplyChainProvenance", function () {
     expect(product.currentStatus).to.equal(ProductStatus.ShippedToWarehouse);
     expect(product.ipfsHash).to.equal("QmWarehouseReceipt001");
   });
+
+  /**
+   * Full chain: producer → distributor warehouse → retailer → in-store → consumer purchase.
+   */
+  async function productInStoreFixture() {
+    const ctx = await networkHelpers.loadFixture(deployWithRolesFixture);
+    const { contract, producer, distributor, retailer, consumer } = ctx;
+
+    const prodId = 42n;
+
+    await contract
+      .connect(producer)
+      .createProduct(prodId, 7001, "QmProducerBatch001", 1893456000);
+    await contract.connect(producer).markReadyToShip(prodId, "QmReady");
+
+    await contract.connect(distributor).receiveAtWarehouse(prodId, "QmRecv");
+    await contract.connect(distributor).passWarehouseQualityCheck(prodId, "QmWHQC");
+    await contract.connect(distributor).storeInWarehouse(prodId, "QmStock");
+    await contract
+      .connect(distributor)
+      .shipToRetailer(prodId, await retailer.getAddress(), "QmShip");
+
+    await contract.connect(retailer).retailerReceiveProduct(prodId, "QmRetailRecv");
+    await contract.connect(retailer).placeInStore(prodId, "QmInStore");
+
+    return { ...ctx, prodId };
+  }
+
+  it("should allow consumer to verify product (same as getProduct)", async function () {
+    const { contract, producer } = await networkHelpers.loadFixture(deployWithRolesFixture);
+
+    await contract
+      .connect(producer)
+      .createProduct(9, 1, "QmA", 0);
+
+    const v = await contract.verifyProduct(9);
+    const g = await contract.getProduct(9);
+    expect(v.prodId).to.equal(g.prodId);
+    expect(v.ipfsHash).to.equal("QmA");
+  });
+
+  it("should allow consumer to purchase after product is in store", async function () {
+    const { contract, retailer, consumer, prodId } = await networkHelpers.loadFixture(
+      productInStoreFixture
+    );
+
+    await contract.connect(consumer).purchaseProduct(prodId, "QmSaleReceipt");
+
+    const product = await contract.productLedger(prodId);
+    expect(product.currentStatus).to.equal(ProductStatus.Sold);
+    expect(product.currentOwner).to.equal(await consumer.getAddress());
+    expect(product.ipfsHash).to.equal("QmSaleReceipt");
+    expect(await contract.rolesMapping(await retailer.getAddress())).to.equal(Role.Retailer);
+  });
+
+  it("should reject purchase if caller is not Consumer", async function () {
+    const { contract, producer, prodId } = await networkHelpers.loadFixture(productInStoreFixture);
+
+    await expect(
+      contract.connect(producer).purchaseProduct(prodId, "QmX")
+    ).to.be.revertedWith("Caller does not have the required role");
+  });
+
+  it("should reject purchase if product is not in store", async function () {
+    const { contract, consumer, producer } = await networkHelpers.loadFixture(deployWithRolesFixture);
+
+    await contract
+      .connect(producer)
+      .createProduct(99, 1, "QmA", 0);
+    await contract.connect(producer).markReadyToShip(99, "QmR");
+
+    await expect(
+      contract.connect(consumer).purchaseProduct(99, "QmX")
+    ).to.be.revertedWith("Product is not available for sale in store");
+  });
 });
