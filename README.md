@@ -165,10 +165,6 @@ Now using node v24.14.1 (npm v11.11.0)
 $ node -v
 v24.14.1
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
-```
 
 ### Make a deployment to Sepolia
 
