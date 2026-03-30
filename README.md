@@ -89,9 +89,6 @@ To prevent network load, all "heavy" dataâ€”such as PDFs, and complex metadataâ€
 
 ---
 
-
----
-
 ### Current Smart Contract Draft Status
 
 The current `SupplyChainProvenance.sol` draft in the `blockchain/contracts/` folder has been compiled and tested locally with Hardhat.
