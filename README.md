@@ -213,6 +213,3 @@ npx hardhat keystore set SEPOLIA_PRIVATE_KEY
 
 ---
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
